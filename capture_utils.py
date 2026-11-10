@@ -56,6 +56,18 @@ def make_temp_path(now=None):
     return folder / make_filename("video", now)
 
 
+def unique_path(folder, name):
+    """folder/name, or folder/stem_1.ext, stem_2.ext... if it already exists."""
+    folder = Path(folder)
+    candidate = folder / name
+    stem, suffix = candidate.stem, candidate.suffix
+    n = 1
+    while candidate.exists():
+        candidate = folder / f"{stem}_{n}{suffix}"
+        n += 1
+    return candidate
+
+
 def format_label(width, height, max_fps):
     """Text shown in the resolution dropdown."""
     return f"{width} x {height}  @ {max_fps:.0f} fps"

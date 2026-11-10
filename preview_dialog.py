@@ -6,8 +6,8 @@ from PySide6.QtCore import Qt, QUrl
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import (
-    QDialog, QFileDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton,
-    QSlider, QVBoxLayout,
+    QDialog, QFileDialog, QHBoxLayout, QLabel, QPushButton, QSlider,
+    QVBoxLayout,
 )
 
 
@@ -38,6 +38,7 @@ class PreviewDialog(QDialog):
         self.play_button = QPushButton("Pause")
         self.slider = QSlider(Qt.Horizontal)
         self.time_label = QLabel("0:00 / 0:00")
+        self.close_button = QPushButton("Close")
         self.save_button = QPushButton("Save...")
         self.discard_button = QPushButton("Discard")
 
@@ -48,6 +49,7 @@ class PreviewDialog(QDialog):
 
         buttons = QHBoxLayout()
         buttons.addStretch(1)
+        buttons.addWidget(self.close_button)
         buttons.addWidget(self.discard_button)
         buttons.addWidget(self.save_button)
 
@@ -60,8 +62,10 @@ class PreviewDialog(QDialog):
         self.slider.sliderMoved.connect(self.player.setPosition)
         self.player.positionChanged.connect(self.on_position)
         self.player.durationChanged.connect(self.slider.setMaximum)
+        self.close_button.clicked.connect(self.reject)
         self.save_button.clicked.connect(self.choose_and_save)
         self.discard_button.clicked.connect(self.discard)
+        self.finished.connect(self._stop_playback)
 
         self.player.play()
 
@@ -104,17 +108,9 @@ class PreviewDialog(QDialog):
         self.temp_path.unlink(missing_ok=True)
         super().reject()
 
-    def reject(self):
-        """Closing the window (X or Esc) must not silently lose the clip."""
-        if self.saved_path is None and self.temp_path.exists():
-            answer = QMessageBox.question(
-                self, "Discard recording?",
-                "This recording has not been saved. Discard it?")
-            if answer != QMessageBox.Yes:
-                return
-            self.discard()
-            return
-        super().reject()
+    def _stop_playback(self, *_):
+        """Closing only looks, never deletes: just stop the sound/video."""
+        self.player.stop()
 
     def _release_player(self):
         self.player.stop()

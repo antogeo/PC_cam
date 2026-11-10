@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtMultimedia import QMediaPlayer
 
 import preview_dialog as pd
 from preview_dialog import PreviewDialog, format_ms
@@ -35,22 +35,20 @@ def test_discard_deletes_clip(qapp, tmp_path):
     assert dlg.saved_path is None
 
 
-def test_closing_asks_and_keeps_clip_on_no(qapp, tmp_path, monkeypatch):
+def test_closing_keeps_clip(qapp, tmp_path):
     clip = make_clip(tmp_path)
-    monkeypatch.setattr(QMessageBox, "question",
-                        lambda *a, **k: QMessageBox.No)
     dlg = PreviewDialog(clip, tmp_path / "default.mp4")
-    dlg.reject()
+    dlg.reject()                      # same path as X and Esc
     assert clip.exists()
+    assert dlg.saved_path is None
 
 
-def test_closing_discards_on_yes(qapp, tmp_path, monkeypatch):
+def test_close_button_keeps_clip_and_stops_playback(qapp, tmp_path):
     clip = make_clip(tmp_path)
-    monkeypatch.setattr(QMessageBox, "question",
-                        lambda *a, **k: QMessageBox.Yes)
     dlg = PreviewDialog(clip, tmp_path / "default.mp4")
-    dlg.reject()
-    assert not clip.exists()
+    dlg.close_button.click()
+    assert clip.exists()
+    assert dlg.player.playbackState() == QMediaPlayer.StoppedState
 
 
 def test_save_button_adds_mp4_suffix(qapp, tmp_path, monkeypatch):
