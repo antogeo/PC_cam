@@ -30,7 +30,8 @@ def test_make_path_creates_folder(tmp_path, monkeypatch):
     photo = cu.make_path("photo", NOW)
     assert video == tmp_path / "vid" / "video_20261109_164500.mp4"
     assert photo == tmp_path / "pic" / "photo_20261109_164500.jpg"
-    assert video.parent.is_dir() and photo.parent.is_dir()
+    assert video.parent.is_dir()
+    assert photo.parent.is_dir()
 
 
 def test_make_path_rejects_unknown_kind(tmp_path, monkeypatch):
